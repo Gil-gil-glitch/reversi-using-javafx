@@ -2,8 +2,7 @@ package course.finalreversi;/*
 
 
     Great Gilbert Soco
-    2600248450
-
+ 
     Content:
 
     Out of the two bots (so far), DumbBot is the easiest to play against.... (I would like to think it is). Easy in the
