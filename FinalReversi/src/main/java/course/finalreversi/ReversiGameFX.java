@@ -2,7 +2,6 @@
 
 
     Great Gilbert Soco
-    2600248450
 
     Content:
 
