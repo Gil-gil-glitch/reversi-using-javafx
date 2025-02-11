@@ -2,6 +2,7 @@
 
 
     Great Gilbert Soco
+    2600248450
 
     Content:
 
@@ -21,10 +22,7 @@ import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -66,6 +64,7 @@ public class ReversiGameFX extends Application {
             -   Human vs Human button
             -   Human vs DumbBot button
             -   Human vs MapleBot button
+            -   Human vs CastellaBot button
             -   Help
 
          */
@@ -82,6 +81,7 @@ public class ReversiGameFX extends Application {
         Button humanVsHumanButton = new Button("Human vs Human");
         Button humanVsDumbBotButton = new Button("Human vs DumbBot");
         Button humanVsMapleBotButton = new Button("Human vs MapleBot");
+        Button humanVsCastellaBotButton = new Button("Human vs. CastellaBot");
 
         Button helpButton = new Button("Help");
         helpButton.setOnAction(e -> showHelp());
@@ -89,8 +89,9 @@ public class ReversiGameFX extends Application {
         humanVsHumanButton.setOnAction(e -> startGame(GameMode.HUMAN_VS_HUMAN));
         humanVsDumbBotButton.setOnAction(e -> startGame(GameMode.HUMAN_VS_DUMB_BOT));
         humanVsMapleBotButton.setOnAction(e -> startGame(GameMode.HUMAN_VS_MAPLE_BOT));
+        humanVsCastellaBotButton.setOnAction(e -> startGame(GameMode.HUMAN_VS_CASTELLA_BOT));
 
-        menuRoot.getChildren().addAll(titleLabel, humanVsHumanButton, humanVsDumbBotButton, humanVsMapleBotButton, helpButton);
+        menuRoot.getChildren().addAll(titleLabel, humanVsHumanButton, humanVsDumbBotButton, humanVsMapleBotButton, humanVsCastellaBotButton, helpButton);
 
         //background color
         Color shogiWood = Color.rgb(222, 184, 135);
@@ -101,6 +102,10 @@ public class ReversiGameFX extends Application {
         primaryStage.setTitle("Reversi Game");
         primaryStage.setScene(menuScene);
         primaryStage.show();
+    }
+
+    private void goToMainMenu() {
+        start(primaryStage);  // Calls the start method to go back to the main menu
     }
 
     private void startGame(GameMode gameMode) {
@@ -119,6 +124,7 @@ public class ReversiGameFX extends Application {
             Controls composes of the following:
             -   dumbBotButton
             -   mapleBotButton
+            -   castellaBotButton
             -   resetButton
             -   helpButton
 
@@ -150,18 +156,17 @@ public class ReversiGameFX extends Application {
         HBox controls = new HBox(10);
         controls.setAlignment(Pos.CENTER);
 
-        ToggleButton dumbBotButton = new ToggleButton("Dumb Bot (Easy)");
-        ToggleButton mapleBotButton = new ToggleButton("Maple Bot (Medium)");
+        // Buttons for Home, Reset, and Help
+        Button homeButton = new Button("Home");
         Button resetButton = new Button("Reset Game");
-
         Button helpButton = new Button("Help");
+
+        homeButton.setOnAction(e -> goToMainMenu());  // Goes back to the main menu
+        resetButton.setOnAction(e -> resetGame());
         helpButton.setOnAction(e -> showHelp());
 
-        resetButton.setOnAction(e -> resetGame());
-        dumbBotButton.setOnAction(e -> toggleDumbBotMode(dumbBotButton.isSelected()));
-        mapleBotButton.setOnAction(e -> toggleMapleBotMode(mapleBotButton.isSelected()));
+        controls.getChildren().addAll(homeButton, resetButton, helpButton);
 
-        controls.getChildren().addAll(dumbBotButton, mapleBotButton, resetButton, helpButton);
 
         root.getChildren().addAll(scoreLabel, currentPlayerLabel, boardGrid, controls);
 
@@ -175,6 +180,8 @@ public class ReversiGameFX extends Application {
             bot = new DumbBot();
         } else if (gameMode == GameMode.HUMAN_VS_MAPLE_BOT) {
             bot = new MapleBot();
+        } else if (gameMode == GameMode.HUMAN_VS_CASTELLA_BOT){
+            bot = new CastellaBot();
         } else {
             bot = null;  // bot is set to null in the case for human vs human mode.
         }
@@ -188,7 +195,8 @@ public class ReversiGameFX extends Application {
         String helpMessage = "REVERSI GAME HELP:\n\n" +
                 "1. ||Human v. Human||: Two human players take turns placing their pieces (⚫ or ⚪) on the board.\n" +
                 "2. ||Human v. DumbBot||: A human player competes against a bot that makes random moves (EASY).\n" +
-                "3. ||Human v. MapleBot||: A human player competes against with a basic strategy (MEDIUM).\n\n" +
+                "3. ||Human v. MapleBot||: A human player competes against with a basic strategy (MEDIUM).\n" +
+                "4. ||Human v. CastellaBot||: A human player competes against with a smart strategy (Medium Difficulty.\n\n" +
                 "GAMEPLAY RULES:\n" +
                 "- The objective is to have the most pieces of your color on the board at the end of the game.\n" +
                 "- Players take turns placing their pieces on the board, flipping opponent's pieces.\n" +
@@ -216,29 +224,55 @@ public class ReversiGameFX extends Application {
 
         boardGrid.getChildren().clear();        // clear a previous visualization of the board
 
-        // creates a new board visualization
-        for (int row = 0; row < SIZE; row++) {
-            for (int col = 0; col < SIZE; col++) {
-                Rectangle cell = new Rectangle(CELL_SIZE, CELL_SIZE);
-                cell.setFill(Color.SPRINGGREEN);
-                cell.setStroke(Color.BLACK);
+            boardGrid.getChildren().clear();  // Clear the previous board visualization
 
-                if (board[row][col] == BLACK || board[row][col] == WHITE) {
-                    cell.setFill(createPieceFill(Color.SPRINGGREEN, board[row][col] == BLACK ? Color.BLACK : Color.WHITE));
+            boolean isBotTurn = (bot != null && currentPlayer == WHITE); // Assuming bot is White
+            boardGrid.setDisable(isBotTurn); // Disable input during bot's turn
+
+            for (int row = 0; row < SIZE; row++) {
+                for (int col = 0; col < SIZE; col++) {
+                    Rectangle cell = new Rectangle(CELL_SIZE, CELL_SIZE);
+                    cell.setFill(Color.SPRINGGREEN);
+                    cell.setStroke(Color.BLACK);
+
+                    if (board[row][col] == BLACK || board[row][col] == WHITE) {
+                        cell.setFill(createPieceFill(Color.SPRINGGREEN, board[row][col] == BLACK ? Color.BLACK : Color.WHITE));
+                    }
+
+                    // Highlight valid moves
+                    String move = String.format("%c%d", 'A' + row, col + 1);
+                    if (!isBotTurn && Reversi.getValidMoves(board, currentPlayer).contains(move)) {
+                        cell.setFill(createPieceFill(Color.SPRINGGREEN, Color.PALEVIOLETRED));
+                    }
+
+                    final int r = row, c = col;
+                    cell.setOnMouseClicked(e -> {
+                        if (!isBotTurn) {
+                            if (Reversi.isValidMove(board, r, c, currentPlayer)) {
+                                Reversi.makeMove(board, r, c, currentPlayer);
+                                switchPlayer();
+
+                                if (Reversi.getValidMoves(board, BLACK).isEmpty() && Reversi.getValidMoves(board, WHITE).isEmpty()) {
+                                    showGameOver();
+                                }
+
+                            }
+                        }
+
+                    });
+
+                    boardGrid.add(cell, col, row);
                 }
-
-                // place a Pale Violet Red circle to indicate valid moves
-                String move = String.format("%c%d", 'A' + row, col + 1);
-                if (Reversi.getValidMoves(board, currentPlayer).contains(move)) {
-                    cell.setFill(createPieceFill(Color.SPRINGGREEN, Color.PALEVIOLETRED));
-                }
-
-                final int r = row, c = col;
-                cell.setOnMouseClicked(e -> handleCellClick(r, c));   // when a player tries to put a valid piece
-
-                boardGrid.add(cell, col, row);
             }
-        }
+
+            if (isBotTurn) {
+                handleBotMove(); // Bot moves when it's its turn
+            }
+
+
+
+
+
     }
 
     private RadialGradient createPieceFill(Color baseColor, Color pieceColor) {
@@ -264,82 +298,6 @@ public class ReversiGameFX extends Application {
         );
     }
 
-    private void handleCellClick(int row, int col) {
-        /*
-
-            This method is responsible for the following:
-            -   Processesing cell clicks
-            -   Validating moves
-            -   Updating the board
-            -   Handling game turns.
-         */
-
-        // gets valid moves and formats them by letter-number
-        List<String> validMoves = Reversi.getValidMoves(board, currentPlayer);
-        String move = String.format("%c%d", 'A' + row, col + 1);
-
-        // checks if a move is not valid. In such case, display analert.
-        if (!validMoves.contains(move)) {
-            showAlert("Invalid Move", "This move is not valid. Try again.");
-            return;
-        }
-
-
-        // game turn logic
-        Reversi.makeMove(board, row, col, currentPlayer);
-        updateScores();             //update score with every turn
-        switchPlayer();
-        updateBoard();              // update board with every turn
-
-        if (isGameOver()) {
-            endGame();
-        } else if (bot != null && currentPlayer == WHITE) {
-            handleBotMove();
-        } else {
-            checkForSkipTurn(); // check if the next player has valid moves
-        }
-    }
-
-    private void checkForSkipTurn() {
-        /*
-
-            This method skips a player's turn if no valid moves are available, switching to the other player.
-         */
-        List<String> validMoves = Reversi.getValidMoves(board, currentPlayer);
-        if (validMoves.isEmpty()) {
-            showAlert("Skip Turn", currentPlayer + " has no valid moves. Turn skipped.");
-            switchPlayer();
-            updateBoard();
-            checkForSkipTurn(); // check again for the next player
-        }
-    }
-
-    private boolean isGameOver() {
-        /*
-
-            This method determines if the game has ended by checking valid moves and board state.
-         */
-        List<String> blackMoves = Reversi.getValidMoves(board, BLACK);
-        List<String> whiteMoves = Reversi.getValidMoves(board, WHITE);
-
-        // check if there are no valid moves for both players
-        boolean noValidMoves = blackMoves.isEmpty() && whiteMoves.isEmpty();
-
-        // check if there are no empty cells left on the board
-        boolean noEmptySpaces = true;
-        for (int row = 0; row < SIZE; row++) {
-            for (int col = 0; col < SIZE; col++) {
-                if (board[row][col] == Reversi.EMPTY) {
-                    noEmptySpaces = false;
-                    break;
-                }
-            }
-            if (!noEmptySpaces) break;
-        }
-
-        return noValidMoves || noEmptySpaces;
-    }
-
     private void switchPlayer() {
         /*
 
@@ -347,6 +305,7 @@ public class ReversiGameFX extends Application {
          */
         currentPlayer = (currentPlayer == BLACK) ? WHITE : BLACK;
         currentPlayerLabel.setText("Current Player: " + (currentPlayer == BLACK ? "Black" : "White"));
+        updateBoard();
     }
 
     private void updateScores() {
@@ -381,23 +340,74 @@ public class ReversiGameFX extends Application {
         System.out.println("Game reset successfully.");
     }
 
-    private void endGame() {
-        /*
+    private void showGameOver() {
+        int blackCount = 0, whiteCount = 0;
 
-            This method ends the game, declares the winner via an alert message, saves move history into a txt file,
-            and resets the game.
-         */
-        String winner = Reversi.determineWinner(board);
-        Reversi.saveMovesToFile();
+        for (int row = 0; row < SIZE; row++) {
+            for (int col = 0; col < SIZE; col++) {
+                if (board[row][col] == BLACK) blackCount++;
+                if (board[row][col] == WHITE) whiteCount++;
+            }
+        }
 
-        showAlert("Game Over", "The game has ended! " + winner + " wins. Move history has been saved to 'moves_history.txt'.");
-        resetGame();
+
+        String winner;
+        if (blackCount > whiteCount) {
+            winner = "Black (⚫) wins!";
+        } else if (whiteCount > blackCount) {
+            winner = "White (⚪) wins!";
+        } else {
+            winner = "It's a tie!";
+        }
+
+        // Identify the current game mode
+        String modeText = (bot == null) ? "Human vs Human" :
+                (bot instanceof DumbBot) ? "Human vs DumbBot" :
+                        (bot instanceof MapleBot) ? "Human vs MapleBot" :
+                                "Human vs CastellaBot";
+
+        Reversi.saveMovesToFile(modeText);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText("Game Over - " + modeText);
+        alert.setContentText("Final Score:\nBlack: " + blackCount + " | White: " + whiteCount + "\n\n" + winner);
+
+        ButtonType restart = new ButtonType("Restart");
+        ButtonType menu = new ButtonType("Main Menu");
+        alert.getButtonTypes().setAll(restart, menu);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == restart) {
+                resetGame();
+            } else if (response == menu) {
+                goToMainMenu();
+            }
+        });
     }
 
+
     private void handleBotMove() {
+
         /*
-            Thie method executes the bot's move with a delay, updating the board and switching back to the player.
+            This method executes the bot's move with a delay, updating the board and switching back to the player.
          */
+
+        if (bot == null) return;
+
+        // Show "thinking" dialog
+        Alert thinkingDialog = new Alert(Alert.AlertType.INFORMATION);
+        thinkingDialog.setTitle("Bot Thinking...");
+        thinkingDialog.setHeaderText(null);
+        thinkingDialog.setContentText("The bot is thinking...");
+
+        // Add rolling progress indicator
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+        VBox dialogContent = new VBox(progressIndicator);
+        dialogContent.setAlignment(Pos.CENTER);
+        thinkingDialog.getDialogPane().setContent(dialogContent);
+
+        thinkingDialog.show();
         List<String> validMoves = Reversi.getValidMoves(board, WHITE); // note that since the player always goes first, the bot is always white
         if (validMoves.isEmpty()) {
             switchPlayer();
@@ -407,8 +417,9 @@ public class ReversiGameFX extends Application {
         // add a delay before the bot makes its move. I added this because when I had people test the game,
         // a regular comment was that the bot was putting pieces too fast, which often lead to confusing
         // the human player.
-        PauseTransition pause = new PauseTransition(Duration.seconds(4));       //bot does not place a piece until after 4 seconds
+        PauseTransition pause = new PauseTransition(Duration.seconds(2));       //bot does not place a piece until after 2 seconds
         pause.setOnFinished(event -> {
+            thinkingDialog.close();
             int[] botMove = bot.getBotMove(board, WHITE);
             if (botMove != null) {
                 Reversi.makeMove(board, botMove[0], botMove[1], WHITE);
@@ -419,6 +430,7 @@ public class ReversiGameFX extends Application {
         });
         pause.play();
     }
+
 
     private void toggleDumbBotMode(boolean isBotMode) {
         /*
@@ -434,6 +446,12 @@ public class ReversiGameFX extends Application {
          */
         bot = isBotMode ? new MapleBot() : null;    // if true, a new instance of MapleBot is created
         resetGame();                                // resets Game
+    }
+
+    private void toggleCastellaBotMode(boolean isBotMode){
+
+        bot = isBotMode ? new CastellaBot() : null;
+        resetGame();
     }
 
     private void showAlert(String title, String message) {
@@ -453,6 +471,7 @@ public class ReversiGameFX extends Application {
         // This enum defines constants that represents the three game modes.
         HUMAN_VS_HUMAN,
         HUMAN_VS_DUMB_BOT,
-        HUMAN_VS_MAPLE_BOT
+        HUMAN_VS_MAPLE_BOT,
+        HUMAN_VS_CASTELLA_BOT
     }
 }
