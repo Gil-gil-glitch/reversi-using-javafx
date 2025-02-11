@@ -2,7 +2,7 @@ package course.finalreversi;/*
 
 
     Great Gilbert Soco
-
+    2600248450
 
     Content:
 
@@ -16,6 +16,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Reversi {
 
@@ -227,18 +229,32 @@ public class Reversi {
     }
 
     // saves the turns to a txtfile
-    public static void saveMovesToFile() {
+    public static void saveMovesToFile(String gameMode) {
         try {
-            // create the file
-            FileWriter writer = new FileWriter("moves_history.txt");
+            // Get the current date and time
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            String timestamp = dateFormat.format(new Date());
 
+            // Format game mode to remove spaces and special characters for filename safety
+            String safeGameMode = gameMode.replaceAll("[^a-zA-Z0-9]", "_");
+
+            // Construct filename: "Human_vs_MapleBot_2025-01-31_14-30-45.txt"
+            String filename = safeGameMode + "_" + timestamp + ".txt";
+
+            // Create and write to the file
+            FileWriter writer = new FileWriter(filename);
+
+            // Write the game mode at the top
+            writer.write("Game Mode: " + gameMode + "\n\n");
+
+            //if ReversiGameFX.ga
             // writing each move to the file
             for (String move : moveHistory) {
                 writer.write(move + "\n");
             }
 
             writer.close();
-            System.out.println("Move history saved to 'moves_history.txt'.");
+            System.out.println("Move history saved to " + filename);
 
             // catch block to check for an error while saving
         } catch (IOException e) {
@@ -274,8 +290,7 @@ public class Reversi {
         else if (whiteCount > blackCount) System.out.println("⚪ wins!");
         else System.out.println("It's a tie!");
 
-        // Save moves to file
-        saveMovesToFile();
+
         return null;
     }
 }
